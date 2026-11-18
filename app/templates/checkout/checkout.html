@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% block title %}Checkout - LocalBizMart{% endblock %}
+{% block content %}
+<div style="margin-bottom: 2rem;">
+    <h1 style="font-size: 1.8rem; font-weight: 800; margin-bottom: 0.5rem;">Review & Place Order</h1>
+    <p style="color: var(--text-muted); font-size: 0.95rem;">
+        Completing your order with: <strong>{{ business.name }}</strong>
+    </p>
+</div>
+
+<form action="{{ url_for('order.checkout') }}" method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 2rem;">
+        <!-- Left Column: Delivery & Payment Details -->
+        <div>
+            <!-- 1. Delivery Address Card -->
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <div class="card-header">
+                    <h3 class="card-title">📍 Delivery Details</h3>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="delivery_address">Complete Delivery Address <span style="color: var(--danger);">*</span></label>
+                    <textarea id="delivery_address" name="delivery_address" class="form-control" rows="3" placeholder="House/Flat number, Street name, Landmark, City, Pincode" required>{{ delivery_address or '' }}</textarea>
+                    <div class="form-hint">Ensure this address is accurate for prompt local delivery.</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="notes">Special Order Notes / Instructions (Optional)</label>
+                    <textarea id="notes" name="notes" class="form-control" rows="2" placeholder="e.g. Please deliver after 5 PM, less sugar, gift packaging, etc.">{{ notes or '' }}</textarea>
+                </div>
+            </div>
+
+            <!-- 2. Payment Method Card -->
+            {% if payment_tracking_enabled %}
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">💳 Payment Method</h3>
+                    </div>
+
+                    <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem;">
+                        This shop accepts the following payment methods. LocalBizMart records your payment status directly with the seller.
+                    </p>
+
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        {% if 'COD' in accepted_methods %}
+                            <label style="border: 1px solid var(--border); padding: 1rem; border-radius: var(--radius-md); display: flex; align-items: flex-start; gap: 0.75rem; cursor: pointer; background: var(--surface);">
+                                <input type="radio" name="payment_method" value="COD" {% if selected_payment != 'UPI' %}checked{% endif %} style="margin-top: 0.25rem; accent-color: var(--primary);">
+                                <div>
+                                    <strong style="font-size: 1rem;">💵 Cash on Delivery (COD)</strong>
+                                    <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem;">
+                                        Pay with cash directly to the seller when your order is delivered to your doorstep.
+                                    </div>
+                                </div>
+                            </label>
+                        {% endif %}
+
+                        {% if 'UPI' in accepted_methods %}
+                            <label style="border: 1px solid var(--border); padding: 1rem; border-radius: var(--radius-md); display: flex; align-items: flex-start; gap: 0.75rem; cursor: pointer; background: var(--surface);">
+                                <input type="radio" name="payment_method" value="UPI" {% if selected_payment == 'UPI' or not ('COD' in accepted_methods) %}checked{% endif %} style="margin-top: 0.25rem; accent-color: var(--primary);">
+                                <div style="flex: 1;">
+                                    <strong style="font-size: 1rem;">📱 Direct UPI Payment</strong>
+                                    <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem;">
+                                        Pay to seller's UPI ID: <code style="background: var(--surface-alt); padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: bold; color: var(--primary-dark);">{{ business.payment_settings.upi_id }}</code>
+                                    </div>
+                                    <div style="font-size: 0.8rem; color: #b45309; margin-top: 0.4rem;">
+                                        ℹ️ You will be able to upload your payment screenshot on the next confirmation screen for the seller to verify.
+                                    </div>
+                                </div>
+                            </label>
+                        {% endif %}
+                    </div>
+                </div>
+            {% else %}
+                <input type="hidden" name="payment_method" value="COD">
+            {% endif %}
+        </div>
+
+        <!-- Right Column: Order Items Summary & Submit -->
+        <div>
+            <div class="card" style="padding: 1.5rem;">
+                <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
+                    Order Summary
+                </h3>
+
+                <div style="margin-bottom: 1.25rem;">
+                    {% for item in cart_items %}
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; font-size: 0.92rem;">
+                            <div>
+                                <div style="font-weight: 600;">{{ item.product.name }}</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">
+                                    {{ item.quantity }} x ₹{{ "%.2f"|format(item.product.price) }}
+                                </div>
+                            </div>
+                            <div style="font-weight: 700;">
+                                ₹{{ "%.2f"|format(item.subtotal) }}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div style="border-top: 2px dashed var(--border); padding-top: 1rem; margin-bottom: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; font-size: 1.3rem; font-weight: 800; color: var(--primary-dark);">
+                        <span>Total Payable:</span>
+                        <span>₹{{ "%.2f"|format(total_amount) }}</span>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block btn-lg">
+                    Confirm & Place Order &rarr;
+                </button>
+
+                <div style="text-align: center; margin-top: 1rem;">
+                    <a href="{{ url_for('cart.view_cart') }}" style="font-size: 0.85rem; color: var(--text-muted);">
+                        &larr; Back to Shopping Cart
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}

@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% block title %}Product Catalogue - {{ business.name }} - LocalBizMart{% endblock %}
+{% block content %}
+<div style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+    <div>
+        <h1 style="font-size: 1.8rem; font-weight: 800; margin-bottom: 0.25rem;">Products & Offerings</h1>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">
+            Manage your items, prices, and instant availability toggles.
+        </p>
+    </div>
+
+    <div style="display: flex; gap: 0.75rem;">
+        <a href="{{ url_for('product.create_product') }}" class="btn btn-primary">
+            + Add New Product
+        </a>
+        <a href="{{ url_for('business.dashboard') }}" class="btn btn-secondary">
+            Dashboard
+        </a>
+    </div>
+</div>
+
+{% if products %}
+    <div class="card" style="padding: 1.25rem;">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th style="width: 70px;">Image</th>
+                        <th>Product Details</th>
+                        <th>Price</th>
+                        <th>Availability</th>
+                        <th style="text-align: right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for prod in products %}
+                        <tr>
+                            <td>
+                                <div style="width: 50px; height: 50px; border-radius: var(--radius-sm); overflow: hidden; background: var(--surface-alt); display: flex; align-items: center; justify-content: center; border: 1px solid var(--border);">
+                                    {% if prod.image_path %}
+                                        <img src="{{ url_for('static', filename=prod.image_path) }}" alt="{{ prod.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                    {% else %}
+                                        <span>📦</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                <div><strong>{{ prod.name }}</strong></div>
+                                <div style="font-size: 0.85rem; color: var(--text-muted);">
+                                    {{ prod.description[:80] if prod.description else 'No description' }}
+                                </div>
+                                <div style="display: flex; gap: 0.5rem; align-items: center; margin-top: 0.25rem;">
+                                    <span class="badge" style="font-size: 0.75rem; background: var(--surface-alt); border: 1px solid var(--border);">
+                                        📸 {{ prod.photo_count }} photo{{ 's' if prod.photo_count != 1 else '' }}
+                                    </span>
+                                    {% if prod.is_disabled_by_admin %}
+                                        <span class="badge badge-disabled">Disabled by Admin Moderation</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                <strong>₹{{ "%.2f"|format(prod.price) }}</strong>
+                            </td>
+                            <td>
+                                <form action="{{ url_for('product.toggle_availability', product_id=prod.product_id) }}" method="POST">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    {% if prod.is_available %}
+                                        <button type="submit" class="btn btn-sm" style="background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; border-radius: var(--radius-full);" title="Click to mark unavailable">
+                                            ● Available
+                                        </button>
+                                    {% else %}
+                                        <button type="submit" class="btn btn-sm" style="background: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1; border-radius: var(--radius-full);" title="Click to mark available">
+                                            ○ Unavailable
+                                        </button>
+                                    {% endif %}
+                                </form>
+                            </td>
+                            <td style="text-align: right;">
+                                <div style="display: inline-flex; gap: 0.4rem;">
+                                    <a href="{{ url_for('product.edit_product', product_id=prod.product_id) }}" class="btn btn-secondary btn-sm">
+                                        Edit
+                                    </a>
+                                    <form action="{{ url_for('product.delete_product', product_id=prod.product_id) }}" method="POST" data-confirm="Are you sure you want to delete '{{ prod.name }}'? Past orders will preserve their historical item records.">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm">
+                                            Delete
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% else %}
+    <div class="card" style="text-align: center; padding: 4rem 1.5rem;">
+        <div style="font-size: 3.5rem; margin-bottom: 1rem;">📦</div>
+        <h2>Your Catalogue is Empty</h2>
+        <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
+            Start listing your homemade or local goods so customers can view and order.
+        </p>
+        <a href="{{ url_for('product.create_product') }}" class="btn btn-primary">
+            + Add Your First Product
+        </a>
+    </div>
+{% endif %}
+{% endblock %}

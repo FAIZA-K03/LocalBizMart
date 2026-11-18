@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% block title %}My Orders - LocalBizMart{% endblock %}
+{% block content %}
+<div style="margin-bottom: 2rem;">
+    <h1 style="font-size: 1.8rem; font-weight: 800; margin-bottom: 0.5rem;">My Orders</h1>
+    <p style="color: var(--text-muted); font-size: 0.95rem;">Track current orders and view order history with local sellers.</p>
+</div>
+
+{% if orders %}
+    <div class="card" style="padding: 1.25rem;">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Shop / Business</th>
+                        <th>Placed On</th>
+                        <th>Total Amount</th>
+                        <th>Order Status</th>
+                        {% if payment_tracking_enabled %}
+                            <th>Payment</th>
+                        {% endif %}
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                        <tr>
+                            <td><strong>#LBM-{{ order.order_id }}</strong></td>
+                            <td>
+                                <a href="{{ url_for('browse.business_detail', business_id=order.business_id) }}">
+                                    {{ order.business.name }}
+                                </a>
+                            </td>
+                            <td>{{ order.placed_at.strftime('%d %b %Y, %I:%M %p') }}</td>
+                            <td><strong>₹{{ "%.2f"|format(order.total_amount) }}</strong></td>
+                            <td>
+                                <span class="badge badge-{{ order.status|lower }}">
+                                    {{ order.status }}
+                                </span>
+                            </td>
+                            {% if payment_tracking_enabled %}
+                                <td>
+                                    {% if order.payment %}
+                                        <div style="font-size: 0.85rem; font-weight: 600;">{{ order.payment.payment_method }}</div>
+                                        <span class="badge badge-pay-{{ 'verification' if order.payment.payment_status == 'Under Verification' else ('paid' if order.payment.payment_status == 'Paid' else ('failed' if order.payment.payment_status == 'Verification Failed' else 'pending')) }}">
+                                            {{ order.payment.payment_status }}
+                                        </span>
+                                    {% endif %}
+                                </td>
+                            {% endif %}
+                            <td>
+                                <a href="{{ url_for('order.order_detail', order_id=order.order_id) }}" class="btn btn-primary btn-sm">
+                                    View & Track
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% else %}
+    <div class="card" style="text-align: center; padding: 4rem 1.5rem;">
+        <div style="font-size: 3.5rem; margin-bottom: 1rem;">📦</div>
+        <h2>No Orders Placed Yet</h2>
+        <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
+            When you purchase handcrafted items or treats from local businesses, your orders will appear here.
+        </p>
+        <a href="{{ url_for('browse.businesses') }}" class="btn btn-primary">Browse Local Shops</a>
+    </div>
+{% endif %}
+{% endblock %}

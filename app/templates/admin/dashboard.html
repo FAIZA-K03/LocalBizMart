@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+{% block title %}Administrator Dashboard - LocalBizMart{% endblock %}
+{% block content %}
+<div style="margin-bottom: 2rem;">
+    <span class="badge badge-role-admin" style="margin-bottom: 0.5rem;">System Administration</span>
+    <h1 style="font-size: 1.8rem; font-weight: 800; margin-top: 0.2rem;">Platform Overview & Management</h1>
+    <p style="color: var(--text-muted); font-size: 0.95rem;">
+        Monitor community marketplace metrics, moderate catalogues, and manage categories.
+    </p>
+</div>
+
+<!-- Pending Approvals Alert (if REQUIRE_ADMIN_APPROVAL is enabled) -->
+{% if pending_approval_count > 0 %}
+    <div class="alert alert-warning" style="display: flex; justify-content: space-between; align-items: center;">
+        <span>🔔 <strong>Action Needed:</strong> There are {{ pending_approval_count }} business profile(s) awaiting administrative review and approval.</span>
+        <a href="{{ url_for('admin.businesses_list', status='pending_approval') }}" class="btn btn-sm btn-primary">Review Businesses</a>
+    </div>
+{% endif %}
+
+<!-- Stats Grid -->
+<div class="grid-4" style="margin-bottom: 2.5rem;">
+    <div class="card" style="border-left: 4px solid #3b82f6;">
+        <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">Registered Users</div>
+        <div style="font-size: 2.2rem; font-weight: 800; color: var(--text-main); margin: 0.35rem 0;">
+            {{ users_count }}
+        </div>
+        <a href="{{ url_for('admin.users_list') }}" style="font-size: 0.82rem; font-weight: 600;">Manage Users &rarr;</a>
+    </div>
+
+    <div class="card" style="border-left: 4px solid var(--primary);">
+        <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">Registered Businesses</div>
+        <div style="font-size: 2.2rem; font-weight: 800; color: var(--text-main); margin: 0.35rem 0;">
+            {{ businesses_count }}
+        </div>
+        <a href="{{ url_for('admin.businesses_list') }}" style="font-size: 0.82rem; font-weight: 600;">Manage Shops &rarr;</a>
+    </div>
+
+    <div class="card" style="border-left: 4px solid var(--secondary);">
+        <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">Total Products</div>
+        <div style="font-size: 2.2rem; font-weight: 800; color: var(--text-main); margin: 0.35rem 0;">
+            {{ products_count }}
+        </div>
+        <a href="{{ url_for('admin.products_list') }}" style="font-size: 0.82rem; font-weight: 600;">Moderate Items &rarr;</a>
+    </div>
+
+    <div class="card" style="border-left: 4px solid #8b5cf6;">
+        <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">Total Orders</div>
+        <div style="font-size: 2.2rem; font-weight: 800; color: var(--text-main); margin: 0.35rem 0;">
+            {{ orders_count }}
+        </div>
+        <a href="{{ url_for('admin.orders_list') }}" style="font-size: 0.82rem; font-weight: 600;">Read-Only Orders Log &rarr;</a>
+    </div>
+</div>
+
+<div class="grid-2">
+    <!-- Recent Users -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Recent User Registrations</h3>
+            <a href="{{ url_for('admin.users_list') }}" class="btn btn-secondary btn-sm">All Users</a>
+        </div>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in recent_users %}
+                        <tr>
+                            <td>
+                                <div><strong>{{ u.name }}</strong></div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">{{ u.email }}</div>
+                            </td>
+                            <td><span class="badge badge-role-{{ u.role }}">{{ u.role }}</span></td>
+                            <td>
+                                <span class="badge badge-{{ 'available' if u.status == 'active' else 'unavailable' }}">
+                                    {{ u.status }}
+                                </span>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Recent Orders -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Latest Platform Orders</h3>
+            <a href="{{ url_for('admin.orders_list') }}" class="btn btn-secondary btn-sm">All Orders</a>
+        </div>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Order</th>
+                        <th>Business</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for o in recent_orders %}
+                        <tr>
+                            <td><strong>#LBM-{{ o.order_id }}</strong></td>
+                            <td>{{ o.business.name }}</td>
+                            <td>₹{{ "%.2f"|format(o.total_amount) }}</td>
+                            <td><span class="badge badge-{{ o.status|lower }}">{{ o.status }}</span></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

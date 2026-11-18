@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block title %}All Orders (Read-Only) - Admin - LocalBizMart{% endblock %}
+{% block content %}
+<div style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+    <div>
+        <h1 style="font-size: 1.8rem; font-weight: 800; margin-bottom: 0.25rem;">Platform Orders Overview</h1>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">
+            Read-only system log of customer orders placed across all local shops. (Payment verification is managed strictly by individual shop owners).
+        </p>
+    </div>
+
+    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary btn-sm">
+        &larr; Admin Dashboard
+    </a>
+</div>
+
+{% if orders %}
+    <div class="card" style="padding: 1.25rem;">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Customer</th>
+                        <th>Shop</th>
+                        <th>Items Summary</th>
+                        <th>Total Amount</th>
+                        <th>Order Status</th>
+                        <th>Payment Status</th>
+                        <th>Placed At</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for o in orders %}
+                        <tr>
+                            <td><strong>#LBM-{{ o.order_id }}</strong></td>
+                            <td>
+                                <div><strong>{{ o.customer.name }}</strong></div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">{{ o.customer.email }}</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">📞 {{ o.customer.phone }}</div>
+                            </td>
+                            <td>
+                                <div><strong>{{ o.business.name }}</strong></div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">{{ o.business.category.category_name }}</div>
+                            </td>
+                            <td>
+                                <div style="font-size: 0.85rem;">
+                                    {% for item in o.items %}
+                                        <div>• {{ item.product_name }} (x{{ item.quantity }})</div>
+                                    {% endfor %}
+                                </div>
+                            </td>
+                            <td><strong>₹{{ "%.2f"|format(o.total_amount) }}</strong></td>
+                            <td>
+                                <span class="badge badge-{{ o.status|lower }}">
+                                    {{ o.status }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if o.payment %}
+                                    <span class="badge badge-pay-{{ 'verification' if o.payment.payment_status == 'Under Verification' else ('paid' if o.payment.payment_status == 'Paid' else ('failed' if o.payment.payment_status == 'Verification Failed' else 'pending')) }}">
+                                        {{ o.payment.payment_method }}: {{ o.payment.payment_status }}
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>{{ o.placed_at.strftime('%d %b %Y, %I:%M %p') }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% else %}
+    <div class="card" style="text-align: center; padding: 3rem;">
+        <p style="color: var(--text-muted);">No orders recorded on the platform yet.</p>
+    </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}Server Error (500) - LocalBizMart{% endblock %}
+{% block content %}
+<div class="card" style="max-width: 600px; margin: 3rem auto; text-align: center; padding: 3rem 2rem;">
+    <h1 style="font-size: 4rem; color: var(--warning); line-height: 1;">500</h1>
+    <h2 style="margin: 1rem 0; color: var(--text-main);">Internal Server Error</h2>
+    <p style="color: var(--text-muted); margin-bottom: 2rem;">
+        An unexpected error occurred while processing your request. Any pending database changes were safely rolled back.
+    </p>
+    <div>
+        <a href="{{ url_for('browse.index') }}" class="btn btn-primary">Return to Marketplace</a>
+    </div>
+</div>
+{% endblock %}

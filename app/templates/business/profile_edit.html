@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block title %}{% if business %}Edit Business Profile{% else %}Set Up Business Profile{% endif %} - LocalBizMart{%
+endblock %}
+{% block content %}
+<div style="max-width: 680px; margin: 1.5rem auto;">
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <h2 class="card-title">{% if business %}Edit Business Profile{% else %}Create Your Local Store Profile{%
+                    endif %}</h2>
+                <p style="color: var(--text-muted); font-size: 0.9rem;">
+                    Provide your shop details so local customers can discover your products.
+                </p>
+            </div>
+        </div>
+
+        <form method="POST" action="{{ url_for('business.profile_edit') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="form-group">
+                <label class="form-label" for="name">Shop / Business Name <span
+                        style="color: var(--danger);">*</span></label>
+                <input type="text" id="name" name="name" class="form-control"
+                    placeholder="e.g. CraftyGifts Studio, Priya's Boutique, Sharma Tailors"
+                    value="{{ (form_data.name if form_data else (business.name if business else '')) }}" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="category_id">Business Category <span
+                        style="color: var(--danger);">*</span></label>
+                <select id="category_id" name="category_id" class="form-control" required>
+                    <option value="">-- Choose Category --</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.category_id }}" {% if (form_data and
+                        form_data.category_id|int==cat.category_id) or (business and
+                        business.category_id==cat.category_id) %}selected{% endif %}>
+                        {{ cat.category_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <div class="form-hint">Categories are managed by the platform administrator.</div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="description">About Your Business / Products Offered</label>
+                <textarea id="description" name="description" class="form-control" rows="3"
+                    placeholder="Tell customers what your business creates or sells (custom gifts, apparel, tailoring, handmade items, home treats, etc.)...">{{ (form_data.description if form_data else (business.description if business else '')) }}</textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="address">Full Shop / Studio / Home Address <span
+                        style="color: var(--danger);">*</span></label>
+                <textarea id="address" name="address" class="form-control" rows="2"
+                    placeholder="House/shop number, street, locality, landmark, city, pincode"
+                    required>{{ (form_data.address if form_data else (business.address if business else '')) }}</textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="whatsapp_number">Official WhatsApp Business Number <span
+                        style="color: var(--danger);">*</span></label>
+                <input type="tel" id="whatsapp_number" name="whatsapp_number" class="form-control"
+                    placeholder="10-digit mobile number (e.g. 9876543210)"
+                    value="{{ (form_data.whatsapp_number if form_data else (business.whatsapp_number if business else '')) }}"
+                    required>
+                <div class="form-hint">Used for 1-click WhatsApp order confirmation messages and customer inquiries.
+                </div>
+            </div>
+
+            <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+                <button type="submit" class="btn btn-primary" style="flex: 1;">
+                    {% if business %}Save Profile Changes{% else %}Create Store & Proceed to Payment Setup{% endif %}
+                </button>
+                {% if business %}
+                <a href="{{ url_for('business.dashboard') }}" class="btn btn-secondary">Cancel</a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

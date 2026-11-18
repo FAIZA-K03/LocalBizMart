@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% block title %}Manage Users - Admin - LocalBizMart{% endblock %}
+{% block content %}
+<div style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+    <div>
+        <h1 style="font-size: 1.8rem; font-weight: 800; margin-bottom: 0.25rem;">User Management</h1>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">
+            Review registered accounts, toggle active status, and safely soft-remove accounts.
+        </p>
+    </div>
+
+    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary btn-sm">
+        &larr; Admin Dashboard
+    </a>
+</div>
+
+<!-- Filters -->
+<div class="card" style="margin-bottom: 1.5rem; padding: 1rem;">
+    <form method="GET" action="{{ url_for('admin.users_list') }}" style="display: flex; gap: 1rem; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 150px;">
+            <select name="role" class="form-control" onchange="this.form.submit()">
+                <option value="">All Roles</option>
+                <option value="customer" {% if role_filter == 'customer' %}selected{% endif %}>Customers</option>
+                <option value="owner" {% if role_filter == 'owner' %}selected{% endif %}>Business Owners</option>
+                <option value="admin" {% if role_filter == 'admin' %}selected{% endif %}>Admins</option>
+            </select>
+        </div>
+        <div style="flex: 1; min-width: 150px;">
+            <select name="status" class="form-control" onchange="this.form.submit()">
+                <option value="">All Statuses</option>
+                <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+                <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+            </select>
+        </div>
+        <div>
+            {% if role_filter or status_filter %}
+                <a href="{{ url_for('admin.users_list') }}" class="btn btn-secondary">Clear Filters</a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<!-- Users Table -->
+<div class="card" style="padding: 1.25rem;">
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>User ID</th>
+                    <th>User Details</th>
+                    <th>Phone</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Joined</th>
+                    <th style="text-align: right;">Moderation Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in users %}
+                    <tr>
+                        <td>#{{ u.user_id }}</td>
+                        <td>
+                            <div><strong>{{ u.name }}</strong></div>
+                            <div style="font-size: 0.85rem; color: var(--text-muted);">{{ u.email }}</div>
+                            {% if u.is_owner and u.business %}
+                                <div style="font-size: 0.8rem; color: var(--primary); font-weight: 600;">Shop: {{ u.business.name }}</div>
+                            {% endif %}
+                        </td>
+                        <td>{{ u.phone }}</td>
+                        <td><span class="badge badge-role-{{ u.role }}">{{ u.role }}</span></td>
+                        <td>
+                            <span class="badge badge-{{ 'available' if u.status == 'active' else 'unavailable' }}">
+                                {{ u.status }}
+                            </span>
+                        </td>
+                        <td>{{ u.created_at.strftime('%d %b %Y') }}</td>
+                        <td style="text-align: right;">
+                            {% if u.user_id != current_user.user_id %}
+                                <div style="display: inline-flex; gap: 0.4rem;">
+                                    <form action="{{ url_for('admin.toggle_user_status', user_id=u.user_id) }}" method="POST">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        {% if u.status == 'active' %}
+                                            <button type="submit" class="btn btn-outline-danger btn-sm" title="Deactivate user">
+                                                Deactivate
+                                            </button>
+                                        {% else %}
+                                            <button type="submit" class="btn btn-outline btn-sm" style="color: var(--success); border-color: var(--success);" title="Activate user">
+                                                Activate
+                                            </button>
+                                        {% endif %}
+                                    </form>
+
+                                    {% if u.status == 'active' %}
+                                        <form action="{{ url_for('admin.soft_remove_user', user_id=u.user_id) }}" method="POST" data-confirm="Soft-remove user '{{ u.name }}'? This deactivates the user and prevents login while preserving all past orders and business records intact.">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn btn-danger btn-sm">
+                                                Soft-Remove
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                </div>
+                            {% else %}
+                                <span style="font-size: 0.8rem; color: var(--text-muted); font-style: italic;">Current Admin</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

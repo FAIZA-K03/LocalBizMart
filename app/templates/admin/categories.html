@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% block title %}Manage Categories - Admin - LocalBizMart{% endblock %}
+{% block content %}
+<div style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+    <div>
+        <h1 style="font-size: 1.8rem; font-weight: 800; margin-bottom: 0.25rem;">Business Categories</h1>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">
+            Define and manage categories available for local businesses.
+        </p>
+    </div>
+
+    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary btn-sm">
+        &larr; Admin Dashboard
+    </a>
+</div>
+
+<div class="grid-2">
+    <!-- Add New Category Form -->
+    <div class="card" style="height: fit-content;">
+        <div class="card-header">
+            <h3 class="card-title">+ Add New Category</h3>
+        </div>
+
+        <form method="POST" action="{{ url_for('admin.categories') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="action" value="add">
+
+            <div class="form-group">
+                <label class="form-label" for="category_name">Category Name <span style="color: var(--danger);">*</span></label>
+                <input type="text" id="category_name" name="category_name" class="form-control" placeholder="e.g. Pottery & Ceramics, Organic Farms" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">Create Category</button>
+        </form>
+    </div>
+
+    <!-- Existing Categories List -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Existing Categories ({{ categories|length }})</h3>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Category Name</th>
+                        <th>Businesses</th>
+                        <th style="text-align: right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cat in categories %}
+                        <tr>
+                            <td>#{{ cat.category_id }}</td>
+                            <td>
+                                <strong>{{ cat.category_name }}</strong>
+                            </td>
+                            <td>
+                                <span class="badge" style="background: var(--surface-alt); color: var(--text-muted);">
+                                    {{ cat.businesses.count() }} shop(s)
+                                </span>
+                            </td>
+                            <td style="text-align: right;">
+                                <div style="display: inline-flex; gap: 0.35rem;">
+                                    <!-- Edit Trigger Modal/Inline -->
+                                    <button type="button" class="btn btn-secondary btn-sm" onclick="editCategoryPrompt({{ cat.category_id }}, '{{ cat.category_name }}')">
+                                        Edit
+                                    </button>
+
+                                    {% if cat.businesses.count() == 0 %}
+                                        <form action="{{ url_for('admin.categories') }}" method="POST" data-confirm="Are you sure you want to delete category '{{ cat.category_name }}'?">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <input type="hidden" name="action" value="delete">
+                                            <input type="hidden" name="category_id" value="{{ cat.category_id }}">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm">
+                                                Delete
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden Edit Form for prompt handling -->
+<form id="editCategoryForm" method="POST" action="{{ url_for('admin.categories') }}" style="display: none;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="action" value="edit">
+    <input type="hidden" name="category_id" id="edit_category_id">
+    <input type="hidden" name="category_name" id="edit_category_name">
+</form>
+
+<script>
+function editCategoryPrompt(id, currentName) {
+    const newName = prompt("Edit category name:", currentName);
+    if (newName && newName.trim() && newName.trim() !== currentName) {
+        document.getElementById('edit_category_id').value = id;
+        document.getElementById('edit_category_name').value = newName.trim();
+        document.getElementById('editCategoryForm').submit();
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% block title %}Manage Businesses - Admin - LocalBizMart{% endblock %}
+{% block content %}
+<div style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+    <div>
+        <h1 style="font-size: 1.8rem; font-weight: 800; margin-bottom: 0.25rem;">Business Management</h1>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">
+            Control shop visibility, approve newly registered businesses, and manage local vendor accounts.
+        </p>
+    </div>
+
+    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary btn-sm">
+        &larr; Admin Dashboard
+    </a>
+</div>
+
+<!-- Status Filters -->
+<div class="card" style="margin-bottom: 1.5rem; padding: 1rem;">
+    <form method="GET" action="{{ url_for('admin.businesses_list') }}" style="display: flex; gap: 1rem; align-items: center;">
+        <label style="font-weight: 600; font-size: 0.9rem;">Filter by Status:</label>
+        <select name="status" class="form-control" style="max-width: 200px;" onchange="this.form.submit()">
+            <option value="">All Statuses</option>
+            <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+            <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+            <option value="pending_approval" {% if status_filter == 'pending_approval' %}selected{% endif %}>Pending Approval</option>
+        </select>
+        {% if status_filter %}
+            <a href="{{ url_for('admin.businesses_list') }}" class="btn btn-secondary btn-sm">Reset</a>
+        {% endif %}
+    </form>
+</div>
+
+<!-- Businesses Table -->
+<div class="card" style="padding: 1.25rem;">
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Shop ID</th>
+                    <th>Business Name</th>
+                    <th>Owner</th>
+                    <th>Category</th>
+                    <th>Products</th>
+                    <th>Status</th>
+                    <th style="text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for b in businesses %}
+                    <tr>
+                        <td>#{{ b.business_id }}</td>
+                        <td>
+                            <div><strong>{{ b.name }}</strong></div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted);">📍 {{ b.address }}</div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted);">📱 {{ b.whatsapp_number }}</div>
+                        </td>
+                        <td>
+                            <div>{{ b.owner.name }}</div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted);">{{ b.owner.email }}</div>
+                        </td>
+                        <td>
+                            <span class="badge" style="background: var(--primary-light); color: var(--primary-dark);">
+                                {{ b.category.category_name }}
+                            </span>
+                        </td>
+                        <td>{{ b.products.count() }} product(s)</td>
+                        <td>
+                            {% if b.status == 'active' %}
+                                <span class="badge badge-available">Active</span>
+                            {% elif b.status == 'pending_approval' %}
+                                <span class="badge badge-pending">Pending Approval</span>
+                            {% else %}
+                                <span class="badge badge-unavailable">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: right;">
+                            <div style="display: inline-flex; gap: 0.4rem;">
+                                <a href="{{ url_for('browse.business_detail', business_id=b.business_id) }}" target="_blank" class="btn btn-secondary btn-sm" title="View Shop">
+                                    View
+                                </a>
+
+                                <form action="{{ url_for('admin.toggle_business_status', business_id=b.business_id) }}" method="POST">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    {% if b.status == 'active' %}
+                                        <button type="submit" class="btn btn-outline-danger btn-sm" title="Hide business from public browse">
+                                            Deactivate
+                                        </button>
+                                    {% else %}
+                                        <button type="submit" class="btn btn-outline btn-sm" style="color: var(--success); border-color: var(--success);" title="Approve / Activate visibility">
+                                            Approve/Activate
+                                        </button>
+                                    {% endif %}
+                                </form>
+
+                                <form action="{{ url_for('admin.remove_business', business_id=b.business_id) }}" method="POST" data-confirm="Are you sure you want to remove business '{{ b.name }}'? If it has existing orders, it will be safely deactivated to protect past records.">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-danger btn-sm">
+                                        Remove
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

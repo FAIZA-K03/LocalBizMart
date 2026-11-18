@@ -1,0 +1,312 @@
+{% extends 'base.html' %}
+{% block title %}Manage Order #LBM-{{ order.order_id }} - {{ business.name }}{% endblock %}
+{% block content %}
+<div style="margin-bottom: 1.5rem;">
+    <a href="{{ url_for('business.incoming_orders') }}" style="color: var(--text-muted); font-size: 0.9rem;">
+        &larr; Back to Incoming Orders
+    </a>
+</div>
+
+<div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
+    <div>
+        <h1 style="font-size: 1.8rem; font-weight: 800; margin-bottom: 0.25rem;">
+            Order Management: #LBM-{{ order.order_id }}
+        </h1>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">
+            Placed on {{ order.placed_at.strftime('%A, %d %B %Y at %I:%M %p') }}
+        </p>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <span class="badge badge-{{ order.status|lower }}" style="font-size: 1rem; padding: 0.4rem 1rem;">
+            Order: {{ order.status }}
+        </span>
+        <a href="{{ customer_wa_link }}" target="_blank" rel="noopener noreferrer" class="btn btn-whatsapp btn-sm">
+            💬 Message Customer on WhatsApp
+        </a>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 2rem;">
+    <!-- Left Column: Customer Details & Items -->
+    <div>
+        <!-- Customer Info Card -->
+        <div class="card" style="margin-bottom: 1.5rem;">
+            <div class="card-header">
+                <h3 class="card-title">👤 Customer Information</h3>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                <div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Customer Name:</div>
+                    <div style="font-size: 1rem; font-weight: 700;">{{ order.customer.name }}</div>
+                </div>
+                <div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Contact Phone:</div>
+                    <div style="font-size: 1rem;">{{ order.customer.phone }}</div>
+                </div>
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Delivery Address:</div>
+                <div style="font-size: 0.95rem; background: var(--surface-alt); padding: 0.75rem; border-radius: var(--radius-sm); margin-top: 0.25rem;">
+                    {{ order.delivery_address }}
+                </div>
+            </div>
+            {% if order.notes %}
+                <div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Special Instructions:</div>
+                    <div style="font-size: 0.9rem; font-style: italic; color: #4b5563; margin-top: 0.25rem;">
+                        "{{ order.notes }}"
+                    </div>
+                </div>
+            {% endif %}
+            {% if order.cancel_reason %}
+                <div style="margin-top: 1rem; padding: 0.75rem; background: #fee2e2; border-radius: var(--radius-sm); border-left: 3px solid var(--danger);">
+                    <div style="font-size: 0.85rem; color: #991b1b; font-weight: 700;">Cancellation Note:</div>
+                    <div style="font-size: 0.9rem; color: #991b1b; margin-top: 0.2rem;">{{ order.cancel_reason }}</div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Order Items Breakdown -->
+        <div class="card" style="margin-bottom: 1.5rem;">
+            <div class="card-header">
+                <h3 class="card-title">📦 Ordered Items</h3>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Unit Price</th>
+                            <th>Quantity</th>
+                            <th>Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in order.items %}
+                            <tr>
+                                <td><strong>{{ item.product_name }}</strong></td>
+                                <td>₹{{ "%.2f"|format(item.unit_price) }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td><strong>₹{{ "%.2f"|format(item.subtotal) }}</strong></td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="border-top: 2px dashed var(--border); padding-top: 1rem; margin-top: 1rem; display: flex; justify-content: space-between; font-size: 1.3rem; font-weight: 800; color: var(--primary-dark);">
+                <span>Total Amount:</span>
+                <span>₹{{ "%.2f"|format(order.total_amount) }}</span>
+            </div>
+        </div>
+
+        <!-- Status History Timeline -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">🕒 Status Transition Log</h3>
+            </div>
+
+            <ul class="timeline">
+                {% for hist in order.status_history %}
+                    <li class="timeline-item">
+                        <span class="timeline-marker {{ hist.status|lower }}"></span>
+                        <div class="timeline-content">
+                            <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                                <strong>{{ hist.status }}</strong>
+                                <span class="timeline-time">{{ hist.changed_at.strftime('%d %b %Y, %I:%M %p') }}</span>
+                            </div>
+                            {% if hist.reason %}
+                                <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">
+                                    {{ hist.reason }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <!-- Right Column: Status Transitions & Payment Verification -->
+    <div>
+        <!-- 1. Order Status Management Controls -->
+        <div class="card" style="margin-bottom: 1.5rem;">
+            <div class="card-header">
+                <h3 class="card-title">🔄 Update Order Status</h3>
+            </div>
+
+            {% if order.is_terminal_status %}
+                <div class="alert alert-info">
+                    This order has reached terminal status (<strong>{{ order.status }}</strong>) and cannot be changed further.
+                </div>
+            {% else %}
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+                    Current Status: <span class="badge badge-{{ order.status|lower }}">{{ order.status }}</span>
+                </p>
+
+                <!-- Reminder if UPI payment is still unverified -->
+                {% if order.payment and order.payment.payment_method == 'UPI' and order.payment.payment_status != 'Paid' and order.status == 'Pending' %}
+                    <div class="alert alert-warning" style="font-size: 0.85rem; margin-bottom: 1rem;">
+                        ⚠️ <strong>Action Required:</strong> Verify customer's UPI payment below and mark as <strong>Paid</strong> before confirming or processing.
+                    </div>
+                {% endif %}
+
+                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    {% if order.status == 'Pending' %}
+                        <!-- Option A: Standard Confirm -->
+                        <form action="{{ url_for('business.update_order_status', order_id=order.order_id) }}" method="POST">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="new_status" value="Confirmed">
+                            <button type="submit" class="btn btn-primary btn-block">
+                                ✓ Confirm Order
+                            </button>
+                        </form>
+
+                        <!-- Option B: UI Shortcut Confirm & Start Processing -->
+                        <form action="{{ url_for('business.update_order_status', order_id=order.order_id) }}" method="POST">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="new_status" value="Processing">
+                            <button type="submit" class="btn btn-block" style="background: #0284c7; color: white; border-color: #0284c7;">
+                                ⚡ Confirm & Start Processing
+                            </button>
+                        </form>
+
+                    {% elif order.status == 'Confirmed' %}
+                        <form action="{{ url_for('business.update_order_status', order_id=order.order_id) }}" method="POST">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="new_status" value="Processing">
+                            <button type="submit" class="btn btn-primary btn-block">
+                                ⚙️ Start Processing (Preparation & Packaging) &rarr;
+                            </button>
+                        </form>
+
+                    {% elif order.status == 'Processing' %}
+                        <form action="{{ url_for('business.update_order_status', order_id=order.order_id) }}" method="POST">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="new_status" value="Shipped">
+                            <button type="submit" class="btn btn-primary btn-block">
+                                🚚 Mark as Shipped (Out for Delivery) &rarr;
+                            </button>
+                        </form>
+
+                    {% elif order.status == 'Shipped' %}
+                        <form action="{{ url_for('business.update_order_status', order_id=order.order_id) }}" method="POST">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="new_status" value="Delivered">
+                            <button type="submit" class="btn btn-block" style="background: var(--success); color: white; border-color: var(--success);">
+                                📦 Mark as Delivered (Completes Order & Collects COD) &rarr;
+                            </button>
+                        </form>
+                    {% endif %}
+
+                    <!-- Cancel Action with Reason -->
+                    {% if 'Cancelled' in valid_next_statuses %}
+                        <details style="border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0.75rem; background: #fff5f5; margin-top: 0.5rem;">
+                            <summary style="color: var(--danger); font-weight: 700; cursor: pointer;">
+                                ❌ Cancel Order
+                            </summary>
+                            <form action="{{ url_for('business.update_order_status', order_id=order.order_id) }}" method="POST" style="margin-top: 0.75rem;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="new_status" value="Cancelled">
+                                <div class="form-group">
+                                    <label class="form-label" style="font-size: 0.85rem;">Cancellation Reason <span style="color: var(--danger);">*</span></label>
+                                    <input type="text" name="cancel_reason" class="form-control" placeholder="e.g. Out of ingredients, shop closed" required>
+                                </div>
+                                <button type="submit" class="btn btn-danger btn-sm btn-block">Confirm Cancellation</button>
+                            </form>
+                        </details>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- 2. Payment Verification Controls -->
+        {% if payment_tracking_enabled and order.payment %}
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <h3 class="card-title">💳 Payment Status</h3>
+                        <p style="font-size: 0.8rem; color: var(--text-muted);">Payment method: {{ order.payment.payment_method }}</p>
+                    </div>
+                    <span class="badge badge-pay-{{ 'verification' if order.payment.payment_status == 'Under Verification' else ('paid' if order.payment.payment_status == 'Paid' else ('failed' if order.payment.payment_status == 'Verification Failed' else 'pending')) }}">
+                        {{ order.payment.payment_status }}
+                    </span>
+                </div>
+
+                <div style="font-size: 0.9rem; margin-bottom: 0.75rem;">
+                    <strong>Method:</strong> {{ order.payment.payment_method }} &bull; <strong>Amount:</strong> ₹{{ "%.2f"|format(order.total_amount) }}
+                </div>
+
+                {% if order.payment.payment_method == 'UPI' %}
+                    <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+                        <strong>Your UPI ID:</strong> {{ business.payment_settings.upi_id }}
+                    </div>
+
+                    {% if order.payment.screenshot_path %}
+                        <div style="margin-bottom: 1.25rem;">
+                            <div style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.35rem;">Customer Uploaded Screenshot:</div>
+                            <a href="{{ url_for('static', filename=order.payment.screenshot_path) }}" target="_blank">
+                                <img src="{{ url_for('static', filename=order.payment.screenshot_path) }}" alt="Customer Payment Receipt" style="width: 100%; max-height: 220px; object-fit: contain; border-radius: var(--radius-sm); border: 1px solid var(--border); background: #f8fafc;">
+                            </a>
+                            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; text-align: center;">Click to view full size</div>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-warning" style="font-size: 0.85rem;">
+                            Waiting for customer to upload UPI payment screenshot.
+                        </div>
+                    {% endif %}
+
+                    {% if order.payment.payment_status != 'Paid' %}
+                        <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                            <form action="{{ url_for('business.verify_payment', order_id=order.order_id) }}" method="POST" style="flex: 1;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="payment_status" value="Paid">
+                                <button type="submit" class="btn btn-primary btn-sm btn-block" style="background: var(--success); border-color: var(--success);">
+                                    ✓ Verify & Mark Paid
+                                </button>
+                            </form>
+
+                            <form action="{{ url_for('business.verify_payment', order_id=order.order_id) }}" method="POST" style="flex: 1;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="payment_status" value="Verification Failed">
+                                <button type="submit" class="btn btn-outline-danger btn-sm btn-block">
+                                    ✗ Reject Screenshot
+                                </button>
+                            </form>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-success" style="font-size: 0.85rem; margin-bottom: 0;">
+                            ✓ Verified and marked as Paid on {{ order.payment.updated_at.strftime('%d %b, %I:%M %p') }}.
+                        </div>
+                    {% endif %}
+
+                {% elif order.payment.payment_method == 'COD' %}
+                    {% if order.status != 'Delivered' and order.payment.payment_status != 'Paid' %}
+                        <div class="alert alert-info" style="font-size: 0.85rem; margin-bottom: 0;">
+                            💵 <strong>Cash on Delivery:</strong> Collect ₹{{ "%.2f"|format(order.total_amount) }} in cash upon doorstep delivery.<br>
+                            Payment status will automatically update to <strong>Paid</strong> when the order status is marked as <strong>Delivered</strong>.
+                        </div>
+                    {% elif order.payment.payment_status != 'Paid' and order.status == 'Delivered' %}
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+                            The order has been delivered. Confirm that cash has been collected:
+                        </p>
+                        <form action="{{ url_for('business.verify_payment', order_id=order.order_id) }}" method="POST">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="payment_status" value="Paid">
+                            <button type="submit" class="btn btn-primary btn-sm btn-block" style="background: var(--success); border-color: var(--success);">
+                                💵 Confirm Cash Collected & Mark Paid
+                            </button>
+                        </form>
+                    {% else %}
+                        <div class="alert alert-success" style="font-size: 0.85rem; margin-bottom: 0;">
+                            ✓ Cash on Delivery payment (₹{{ "%.2f"|format(order.total_amount) }}) collected and marked as Paid.
+                        </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

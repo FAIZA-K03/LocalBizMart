@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block title %}Browse Local Businesses - LocalBizMart{% endblock %}
+{% block content %}
+<div style="margin-bottom: 2rem;">
+    <h1 style="font-size: 1.8rem; font-weight: 800; margin-bottom: 0.5rem;">Explore Local Businesses & Home Creators</h1>
+    <p style="color: var(--text-muted); font-size: 0.95rem;">
+        Discover verified home-based and neighbourhood businesses.
+    </p>
+</div>
+
+<!-- Filters Card -->
+<div class="card" style="margin-bottom: 2rem; padding: 1.25rem;">
+    <form action="{{ url_for('browse.businesses') }}" method="GET" style="display: flex; gap: 1rem; flex-wrap: wrap;">
+        <div style="flex: 2; min-width: 240px;">
+            <input type="text" name="q" class="form-control" placeholder="Search by business name..." value="{{ search_query or '' }}">
+        </div>
+        <div style="flex: 1; min-width: 180px;">
+            <select name="category" class="form-control">
+                <option value="">All Categories</option>
+                {% for cat in categories %}
+                    <option value="{{ cat.category_id }}" {% if selected_category == cat.category_id %}selected{% endif %}>
+                        {{ cat.category_name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <button type="submit" class="btn btn-primary">Filter</button>
+            {% if search_query or selected_category %}
+                <a href="{{ url_for('browse.businesses') }}" class="btn btn-secondary">Reset</a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<!-- Business Cards Grid -->
+{% if businesses %}
+    <div class="grid-3">
+        {% for biz in businesses %}
+            <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                        <span class="badge" style="background: var(--primary-light); color: var(--primary-dark);">
+                            {{ biz.category.category_name }}
+                        </span>
+                        <span class="badge badge-available">Open</span>
+                    </div>
+
+                    <h3 style="font-size: 1.3rem; margin-bottom: 0.5rem;">
+                        <a href="{{ url_for('browse.business_detail', business_id=biz.business_id) }}">{{ biz.name }}</a>
+                    </h3>
+
+                    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
+                        {{ biz.description }}
+                    </p>
+
+                    <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">
+                        <strong>📍 Address:</strong> {{ biz.address }}
+                    </div>
+                </div>
+
+                <div style="border-top: 1px solid var(--border); padding-top: 1rem; margin-top: 1rem; display: flex; gap: 0.5rem;">
+                    <a href="{{ url_for('browse.business_detail', business_id=biz.business_id) }}" class="btn btn-primary btn-sm" style="flex: 1;">
+                        View Products
+                    </a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="card" style="text-align: center; padding: 3rem 1rem;">
+        <div style="font-size: 3rem; margin-bottom: 1rem;">🔍</div>
+        <h3>No businesses matched your search</h3>
+        <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Try adjusting your search terms or removing the category filter.</p>
+        <a href="{{ url_for('browse.businesses') }}" class="btn btn-secondary">View All Businesses</a>
+    </div>
+{% endif %}
+{% endblock %}

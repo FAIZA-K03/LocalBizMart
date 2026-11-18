@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block title %}Create Account - LocalBizMart{% endblock %}
+{% block content %}
+<div style="max-width: 520px; margin: 2rem auto;">
+    <div class="card">
+        <div class="card-header" style="justify-content: center; text-align: center;">
+            <div>
+                <h2 class="card-title">Join LocalBizMart</h2>
+                <p style="color: var(--text-muted); font-size: 0.9rem;">Register as a Customer or Local Business Owner</p>
+            </div>
+        </div>
+
+        <form method="POST" action="{{ url_for('auth.register') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <!-- Role Selection -->
+            <div class="form-group">
+                <label class="form-label">I want to register as:</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                    <label style="border: 2px solid {% if role == 'customer' %}var(--primary){% else %}var(--border){% endif %}; padding: 0.75rem; border-radius: var(--radius-md); cursor: pointer; display: flex; align-items: center; gap: 0.5rem; background: {% if role == 'customer' %}var(--primary-light){% else %}var(--surface){% endif %};">
+                        <input type="radio" name="role" value="customer" {% if role != 'owner' %}checked{% endif %} style="accent-color: var(--primary);">
+                        <div>
+                            <strong>Customer</strong>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">Buy from local shops</div>
+                        </div>
+                    </label>
+
+                    <label style="border: 2px solid {% if role == 'owner' %}var(--primary){% else %}var(--border){% endif %}; padding: 0.75rem; border-radius: var(--radius-md); cursor: pointer; display: flex; align-items: center; gap: 0.5rem; background: {% if role == 'owner' %}var(--primary-light){% else %}var(--surface){% endif %};">
+                        <input type="radio" name="role" value="owner" {% if role == 'owner' %}checked{% endif %} style="accent-color: var(--primary);">
+                        <div>
+                            <strong>Business Owner</strong>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">Sell home/local goods</div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="name">Full Name</label>
+                <input type="text" id="name" name="name" class="form-control" placeholder="e.g. Priya Sharma" value="{{ name or '' }}" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="email">Email Address</label>
+                <input type="email" id="email" name="email" class="form-control" placeholder="priya@example.com" value="{{ email or '' }}" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="phone">Phone / WhatsApp Number</label>
+                <input type="tel" id="phone" name="phone" class="form-control" placeholder="10-digit mobile number" value="{{ phone or '' }}" required>
+                <div class="form-hint">Used for order updates and customer communication.</div>
+            </div>
+
+            <div class="grid-2">
+                <div class="form-group">
+                    <label class="form-label" for="password">Password</label>
+                    <input type="password" id="password" name="password" class="form-control" placeholder="Min. 6 chars" required minlength="6">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="confirm_password">Confirm Password</label>
+                    <input type="password" id="confirm_password" name="confirm_password" class="form-control" placeholder="Repeat password" required minlength="6">
+                </div>
+            </div>
+
+            <div style="margin-top: 1.5rem;">
+                <button type="submit" class="btn btn-primary btn-block">Complete Registration</button>
+            </div>
+        </form>
+
+        <div style="text-align: center; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.9rem; color: var(--text-muted);">
+            Already have an account? <a href="{{ url_for('auth.login') }}" style="font-weight: 600;">Sign in here</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

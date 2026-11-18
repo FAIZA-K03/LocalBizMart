@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+{% block title %}LocalBizMart - Online Marketplace for Local & Home-Based Businesses{% endblock %}
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-banner">
+    <div style="max-width: 720px;">
+        <span class="badge" style="background: rgba(255,255,255,0.25); color: #fff; margin-bottom: 0.75rem;">
+            Connecting Local Sellers & Customers
+        </span>
+        <h1 class="hero-title">Discover Local Creators, Boutiques & WhatsApp Sellers</h1>
+        <p class="hero-subtitle">
+            A simple marketplace connecting you with home-based sellers, personalized gifting businesses, clothing brands, custom tailoring, handicrafts, and local stores.
+        </p>
+
+        <form action="{{ url_for('browse.businesses') }}" method="GET" class="search-box">
+            <input type="text" name="q" placeholder="Search gifts, dresses, kurtis, tailoring, decor, crafts...">
+            <button type="submit" class="btn btn-primary" style="padding: 0.6rem 1.25rem;">Search</button>
+        </form>
+    </div>
+</section>
+
+<!-- Categories Bar -->
+<section style="margin-bottom: 3rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+        <div>
+            <h2 style="font-size: 1.35rem; font-weight: 700;">Explore by Category</h2>
+            <p style="color: var(--text-muted); font-size: 0.88rem;">Browse businesses based on what you are looking for</p>
+        </div>
+        <a href="{{ url_for('browse.businesses') }}" style="font-weight: 600; font-size: 0.9rem;">View All &rarr;</a>
+    </div>
+
+    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+        {% for cat in categories %}
+            <a href="{{ url_for('browse.businesses', category=cat.category_id) }}" 
+               class="btn btn-secondary btn-sm" 
+               style="border-radius: var(--radius-full); padding: 0.5rem 1rem;">
+                🏷️ {{ cat.category_name }}
+            </a>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- Featured Local Businesses -->
+<section style="margin-bottom: 3rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+        <div>
+            <h2 style="font-size: 1.35rem; font-weight: 700;">Featured Businesses & Home Sellers</h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Verified small businesses, custom gifting artists, and clothing boutiques</p>
+        </div>
+        <a href="{{ url_for('browse.businesses') }}" style="font-weight: 600; font-size: 0.9rem;">View All Businesses &rarr;</a>
+    </div>
+
+    {% if featured_businesses %}
+        <div class="grid-3">
+            {% for biz in featured_businesses %}
+                <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                            <span class="badge" style="background: var(--primary-light); color: var(--primary-dark);">
+                                {{ biz.category.category_name }}
+                            </span>
+                            <span class="badge badge-available">Open</span>
+                        </div>
+                        <h3 style="font-size: 1.2rem; margin: 0.4rem 0;">
+                            <a href="{{ url_for('browse.business_detail', business_id=biz.business_id) }}">{{ biz.name }}</a>
+                        </h3>
+                        <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 0.75rem;">
+                            {{ biz.description[:110] }}{% if biz.description|length > 110 %}...{% endif %}
+                        </p>
+                        <div style="font-size: 0.82rem; color: var(--text-light); margin-bottom: 1rem;">
+                            📍 {{ biz.address }}
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 0.5rem; border-top: 1px solid var(--border); padding-top: 0.85rem;">
+                        <a href="{{ url_for('browse.business_detail', business_id=biz.business_id) }}" class="btn btn-outline btn-sm" style="flex: 1;">
+                            View Catalogue
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p style="color: var(--text-muted);">No businesses found yet.</p>
+    {% endif %}
+</section>
+
+<!-- Diverse Products Section -->
+<section style="margin-bottom: 3rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+        <div>
+            <h2 style="font-size: 1.35rem; font-weight: 700;">Latest Products & Offerings</h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Gifts, boutique wear, tailoring, handmade crafts, and more</p>
+        </div>
+    </div>
+
+    {% if recent_products %}
+        <div class="grid-4">
+            {% for prod in recent_products %}
+                <div class="product-card">
+                    <div class="product-img-box">
+                        {% if prod.image_path %}
+                            <img src="{{ url_for('static', filename=prod.image_path) }}" alt="{{ prod.name }}" class="product-img">
+                        {% else %}
+                            <div style="color: var(--text-light); font-size: 2.5rem;">🎁</div>
+                        {% endif %}
+                        <div style="position: absolute; top: 8px; right: 8px;">
+                            {% if prod.is_available %}
+                                <span class="badge badge-available">Available</span>
+                            {% else %}
+                                <span class="badge badge-unavailable">Unavailable</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="product-body">
+                        <div class="product-business">From {{ prod.business.name }}</div>
+                        <h4 style="font-size: 1.05rem; margin: 0.25rem 0;">
+                            <a href="{{ url_for('browse.product_detail', product_id=prod.product_id) }}">{{ prod.name }}</a>
+                        </h4>
+                        <div class="product-price">₹{{ "%.2f"|format(prod.price) }}</div>
+                        
+                        <div style="margin-top: auto; padding-top: 0.5rem;">
+                            <a href="{{ url_for('browse.product_detail', product_id=prod.product_id) }}" class="btn btn-outline btn-sm btn-block">
+                                View Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p style="color: var(--text-muted);">No products listed yet.</p>
+    {% endif %}
+</section>
+
+<!-- Seller Onboarding Callout -->
+<section class="card" style="background: linear-gradient(to right, #fef3c7, #fde68a); border: none; padding: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h3 style="font-size: 1.25rem; color: #78350f; margin-bottom: 0.35rem;">Do you do business through WhatsApp, Instagram or from Home?</h3>
+            <p style="color: #92400e; font-size: 0.95rem; max-width: 650px;">
+                Whether you sell custom gifts, run a boutique clothing brand, offer tailoring services, or make handmade items, LocalBizMart gives you a free catalog and an easy way to take orders.
+            </p>
+        </div>
+        <a href="{{ url_for('auth.register') }}" class="btn btn-primary" style="background: #b45309; border-color: #b45309;">
+            Register as a Business &rarr;
+        </a>
+    </div>
+</section>
+{% endblock %}
