@@ -120,6 +120,14 @@ def seed_database(app=None):
         img_planters = create_sample_image("craft_terracotta_pots.png", "Hand-Painted Planters", (194, 65, 12))
         img_tailoring = create_sample_image("craft_custom_tailoring.png", "Custom Blouse Stitching", (217, 70, 239))
 
+        # Bakery & Custom Cakes images (Baker King)
+        img_truffle = create_sample_image("cake_chocolate_truffle.png", "Chocolate Truffle Cake", (75, 40, 25))
+        img_truffle_2 = create_sample_image("cake_chocolate_truffle_2.png", "Rich Truffle Ganache & Curls", (95, 50, 30))
+        img_truffle_3 = create_sample_image("cake_chocolate_truffle_3.png", "Baker King Custom Box", (60, 30, 18))
+
+        img_pineapple = create_sample_image("cake_pineapple.png", "Fresh Pineapple Cake", (215, 155, 20))
+        img_pineapple_2 = create_sample_image("cake_pineapple_2.png", "Fresh Pineapple Chunks & Cream", (235, 175, 35))
+
         # Payment Receipts
         receipt_1 = create_sample_image("receipt_sample_1.png", "UPI Payment Receipt", (16, 185, 129))
         receipt_3 = create_sample_image("receipt_sample_3.png", "UPI Receipt Screenshot", (79, 70, 229))
@@ -171,8 +179,8 @@ def seed_database(app=None):
         # -------------------------------------------------------------
         print("5. Creating Business 2: Aura Ethnic Wear & Boutique (Clothing Brand)...")
         owner2 = User(
-            name="Anita Desai",
-            email="anita@craftcorner.com",
+            name="Anam Fatima",
+            email="urbanclothing@gmail.com",
             phone="9876543211",
             role="owner",
             status="active"
@@ -183,7 +191,7 @@ def seed_database(app=None):
 
         biz2 = Business(
             owner_id=owner2.user_id,
-            name="Aura Ethnic Wear & Clothing Boutique",
+            name="Urban Clothing",
             description="Hand-block printed cotton kurtis, customized festive ethnic sets, comfortable summer dresses, and artisanal dupattas tailored with love.",
             category_id=categories["Boutique & Clothing"].category_id,
             address="Shop 5, Fashion Street Lane, Kalaghoda, Mumbai - 400001",
@@ -196,7 +204,7 @@ def seed_database(app=None):
         pay2 = BusinessPaymentSettings(
             business_id=biz2.business_id,
             accepts_upi=True,
-            upi_id="aura.boutique@okaxis",
+            upi_id="urbanclothing@ubin",
             accepts_cod=True
         )
         db.session.add(pay2)
