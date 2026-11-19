@@ -289,8 +289,8 @@ def seed_database(app=None):
         # -------------------------------------------------------------
         print("7. Creating demo Customer accounts...")
         customer1 = User(
-            name="Rohan Gupta",
-            email="rohan@customer.com",
+            name="Faiza",
+            email="faiza@gmail.com",
             phone="9811122233",
             role="customer",
             status="active"
